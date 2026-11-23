@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Calendar Journal Pro</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #051b0f;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .calendar-container {
+            width: 100%;
+            max-width: 1100px;
+            background-color: #0d1610;
+            border: 1px solid #1e3a29;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: #4ade80;
+            font-weight: 700;
+        }
+
+        .nav-btn {
+            background-color: #142e1e;
+            color: #ffffff;
+            border: 1px solid #2e5c3e;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: #224d32;
+            border-color: #4ade80;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 600;
+            color: #86efac;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .day-cell {
+            background-color: #122217;
+            border: 1px solid #1e3827;
+            border-radius: 8px;
+            min-height: 125px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .day-cell:hover {
+            transform: translateY(-2px);
+            border-color: #4ade80;
+        }
+
+        .cell-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .day-number {
+            font-size: 0.9rem;
+            color: #a7f3d0;
+            font-weight: 600;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-tp { background-color: #166534; color: #4ade80; }
+        .badge-sl { background-color: #991b1b; color: #fca5a5; }
+        .badge-even { background-color: #374151; color: #d1d5db; }
+
+        .cell-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            margin: auto 0;
+        }
+
+        .pnl-display {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .pnl-plus { color: #4ade80; }
+        .pnl-minus { color: #f87171; }
+
+        .trade-count {
+            font-size: 0.75rem;
+            color: #e5e7eb;
+        }
+
+        .cell-bottom {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 16px;
+        }
+
+        .chart-icon {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .empty-cell {
+            background-color: #0a120c;
+            border-color: transparent;
+            cursor: default;
+        }
+        .empty-cell:hover { transform: none; border-color: transparent; }
+
+        /* Modal Design */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #112217;
+            border: 1px solid #224d32;
+            padding: 24px;
+            border-radius: 12px;
+            width: 380px;
+            max-width: 90%;
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+            color: #4ade80;
+            border-bottom: 1px solid #1e3827;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: #a7f3d0;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background-color: #09140d;
+            border: 1px solid #1e3827;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: #4ade80;
+        }
+
+        .color-pickers {
+            display: flex;
+            gap: 10px;
+        }
+
+        .color-pickers input[type="color"] {
+            flex: 1;
+            height: 38px;
+            cursor: pointer;
+            border: 1px solid #1e3827;
+            border-radius: 6px;
+            background: none;
+        }
+
+        .image-preview-container {
+            margin-top: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 6px;
+            border: 1px solid #2e5c3e;
+            display: none;
+        }
+
+        .btn-remove-img {
+            background: #991b1b;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 9px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn-save { background-color: #22c55e; color: #ffffff; }
+        .btn-save:hover { background-color: #16a34a; }
+        .btn-cancel { background-color: #374151; color: #ffffff; }
+        .btn-cancel:hover { background-color: #4b5563; }
+    </style>
+</head>
+<body>
+
+    <div class="calendar-container">
+        <div class="header">
+            <button class="nav-btn" onclick="changeMonth(-1)">&#10094; เดือนก่อนหน้า</button>
+            <h1 id="monthYearDisplay"></h1>
+            <button class="nav-btn" onclick="changeMonth(1)">เดือนถัดไป &#10095;</button>
+        </div>
+
+        <div class="weekdays">
+            <div>จันทร์</div><div>อังคาร</div><div>พุธ</div><div>พฤหัสฯ</div><div>ศุกร์</div><div>เสาร์</div><div>อาทิตย์</div>
+        </div>
+
+        <div class="days-grid" id="daysGrid"></div>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal" id="tradeModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">บันทึกข้อมูลการเทรด</h3>
+            
+            <div class="form-group">
+                <label>ผลการเทรด (Status):</label>
+                <select id="tradeTypeInput" onchange="handleStatusChange()">
+                    <option value="">-- ไม่ระบุ --</option>
+                    <option value="TP">TP (Take Profit)</option>
+                    <option value="SL">SL (Stop Loss)</option>
+                    <option value="EVEN">EVEN (เท่าทุน)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>กำไร / ขาดทุน (P&L):</label>
+                <input type="number" id="pnlInput" step="any" placeholder="ใส่ตัวเลข (เช่น 500)">
+            </div>
+
+            <div class="form-group">
+                <label>จำนวนครั้งที่เทรด:</label>
+                <input type="number" id="tradeCountInput" min="0" placeholder="เช่น 5">
+            </div>
+
+            <div class="form-group">
+                <label>แนบรูปกราฟที่เทรด:</label>
+                <input type="file" id="imageInput" accept="image/*" onchange="previewSelectedImage(this)">
+                <div class="image-preview-container">
+                    <img id="imagePreview" class="image-preview" alt="Chart Preview">
+                    <button type="button" id="removeImgBtn" class="btn-remove-img" onclick="removeImage()">ลบรูปภาพ</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>ปรับสีช่อง / สีตัวอักษร:</label>
+                <div class="color-pickers">
+                    <input type="color" id="bgColorInput" value="#7f1d1d" title="สีพื้นหลังช่อง">
+                    <input type="color" id="textColorInput" value="#ffffff" title="สีตัวอักษร">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-save" onclick="saveTradeData()">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const monthsThai = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", 
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+
+        let currentDate = new Date();
+        let selectedDayKey = null;
+        let currentBase64Image = "";
+
+        let tradeData = JSON.parse(localStorage.getItem('tradeData') || '{}');
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('monthYearDisplay').innerText = `${monthsThai[month]} ${year + 543} (ค.ศ. ${year})`;
+
+            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; 
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty-cell';
+                grid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const cellKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+
+                const data = tradeData[cellKey] || { count: '', type: '', pnl: '', bg: '', text: '#ffffff', image: '' };
+                
+                const hasTradeData = Boolean(data.type || data.pnl !== '' || data.count || data.image);
+
+                // กำหนดสีพื้นหลัง: ถ้าเลือก SL ให้ช่องเป็นสีแดง (#7f1d1d) เสมอ
+                if (data.type === 'SL') {
+                    cell.style.backgroundColor = '#7f1d1d'; // สีแดงสำหรับ SL
+                } else if (data.bg) {
+                    cell.style.backgroundColor = data.bg;
+                } else if (hasTradeData) {
+                    cell.style.backgroundColor = '#7f1d1d';
+                } else {
+                    cell.style.backgroundColor = '#122217';
+                }
+
+                // Format PnL (+ / -)
+                let pnlText = '';
+                let pnlClass = '';
+                if (data.pnl !== '' && data.pnl !== null && !isNaN(data.pnl)) {
+                    let val = Number(data.pnl);
+
+                    // ถ้าเป็น SL บังคับให้เป็นค่าลบและติดเครื่องหมาย - นำหน้าเสมอ
+                    if (data.type === 'SL') {
+                        val = -Math.abs(val);
+                    }
+
+                    if (val > 0) {
+                        pnlText = `+${val.toLocaleString()}`;
+                        pnlClass = 'pnl-plus';
+                    } else if (val < 0) {
+                        pnlText = `${val.toLocaleString()}`;
+                        pnlClass = 'pnl-minus';
+                    } else {
+                        pnlText = data.type === 'SL' ? '-0' : '0';
+                        pnlClass = data.type === 'SL' ? 'pnl-minus' : '';
+                    }
+                }
+
+                // Badge TP/SL
+                let badgeHtml = '';
+                if (data.type === 'TP') badgeHtml = `<span class="badge badge-tp">TP</span>`;
+                else if (data.type === 'SL') badgeHtml = `<span class="badge badge-sl">SL</span>`;
+                else if (data.type === 'EVEN') badgeHtml = `<span class="badge badge-even">EVEN</span>`;
+
+                // Trade count text
+                const countText = data.count ? `${Number(data.count).toLocaleString()} ไม้` : '';
+
+                // Chart Icon indicator
+                const imageIconHtml = data.image ? `<span class="chart-icon" title="มีรูปกราฟแนบอยู่">📊</span>` : '';
+
+                cell.innerHTML = `
+                    <div class="cell-top">
+                        <span class="day-number">${day}</span>
+                        ${badgeHtml}
+                    </div>
+                    <div class="cell-body">
+                        ${pnlText ? `<div class="pnl-display ${pnlClass}">${pnlText}</div>` : ''}
+                        ${countText ? `<div class="trade-count" style="color:${data.text};">${countText}</div>` : ''}
+                    </div>
+                    <div class="cell-bottom">
+                        ${imageIconHtml}
+                    </div>
+                `;
+
+                cell.onclick = () => openModal(cellKey, day, month, year, data);
+                grid.appendChild(cell);
+            }
+        }
+
+        // เมื่อเปลี่ยนการเลือกผลการเทรด (Status) ใน Modal
+        function handleStatusChange() {
+            const type = document.getElementById('tradeTypeInput').value;
+            const bgInput = document.getElementById('bgColorInput');
+            
+            if (type === 'SL') {
+                bgInput.value = '#7f1d1d'; // ปรับสีตัวเลือกเป็นสีแดงเข้มทันทีที่เลือก SL
+            } else if (type === 'TP') {
+                bgInput.value = '#14532d'; // ปรับสีตัวเลือกเป็นสีเขียวเมื่อเลือก TP
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function openModal(key, day, month, year, data) {
+            selectedDayKey = key;
+            currentBase64Image = data.image || "";
+
+            document.getElementById('modalTitle').innerText = `วันที่ ${day} ${monthsThai[month]} ${year}`;
+            document.getElementById('tradeTypeInput').value = data.type || "";
+            document.getElementById('pnlInput').value = data.pnl !== undefined ? data.pnl : "";
+            document.getElementById('tradeCountInput').value = data.count || "";
+            
+            document.getElementById('bgColorInput').value = data.bg || (data.type === 'SL' ? '#7f1d1d' : '#7f1d1d');
+            document.getElementById('textColorInput').value = data.text || "#ffffff";
+            document.getElementById('imageInput').value = "";
+
+            updateImagePreviewDisplay();
+            document.getElementById('tradeModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('tradeModal').style.display = 'none';
+            selectedDayKey = null;
+            currentBase64Image = "";
+        }
+
+        function previewSelectedImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentBase64Image = e.target.result;
+                    updateImagePreviewDisplay();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeImage() {
+            currentBase64Image = "";
+            document.getElementById('imageInput').value = "";
+            updateImagePreviewDisplay();
+        }
+
+        function updateImagePreviewDisplay() {
+            const imgEl = document.getElementById('imagePreview');
+            const removeBtn = document.getElementById('removeImgBtn');
+            if (currentBase64Image) {
+                imgEl.src = currentBase64Image;
+                imgEl.style.display = 'block';
+                removeBtn.style.display = 'inline-block';
+            } else {
+                imgEl.src = '';
+                imgEl.style.display = 'none';
+                removeBtn.style.display = 'none';
+            }
+        }
+
+        function saveTradeData() {
+            if (!selectedDayKey) return;
+
+            const type = document.getElementById('tradeTypeInput').value;
+            let pnl = document.getElementById('pnlInput').value;
+            const count = document.getElementById('tradeCountInput').value;
+            let bg = document.getElementById('bgColorInput').value;
+            const text = document.getElementById('textColorInput').value;
+
+            // ถ้าเลือก SL บังคับให้เปลี่ยนค่า PnL เป็นลบ (-) อัตโนมัติ และตั้งสีพื้นหลังเป็นสีแดง
+            if (type === 'SL') {
+                if (pnl !== '' && !isNaN(pnl)) {
+                    pnl = -Math.abs(Number(pnl));
+                }
+                bg = '#7f1d1d'; // ตั้งสีเป็นแดงสำหรับ SL
+            }
+
+            tradeData[selectedDayKey] = {
+                type,
+                pnl,
+                count,
+                bg,
+                text,
+                image: currentBase64Image
+            };
+
+            try {
+                localStorage.setItem('tradeData', JSON.stringify(tradeData));
+            } catch (e) {
+                alert("ไม่สามารถบันทึกได้ เนื่องจากขนาดรูปภาพใหญ่เกินขีดจำกัดของเบราว์เซอร์");
+                return;
+            }
+
+            closeModal();
+            renderCalendar();
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
